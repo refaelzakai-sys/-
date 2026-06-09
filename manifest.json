@@ -1,0 +1,18 @@
+{
+  "nav_type": "none",
+  "name": "קבלו כסף בחינם",
+  "short_name": "קבלו כסף",
+  "description": "רוצים להרוויח כסף בחינם? כנסו ולא תפסידו!",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
