@@ -21,11 +21,11 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="no-select">
 
     <div id="login-page" class="page active">
         <div class="auth-card">
-            <img src="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg" alt="לוגו" class="auth-logo">
+            <img src="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg" alt="לוגו" class="auth-logo no-save" oncontextmenu="return false;" draggable="false">
             <h2>ברוכים הבאים חזרה</h2>
             <p>התחברו כדי להמשיך לצבור כסף</p>
             
@@ -46,6 +46,7 @@
 
     <div id="register-page" class="page">
         <div class="auth-card">
+            <img src="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg" alt="לוגו" class="auth-logo no-save" oncontextmenu="return false;" draggable="false">
             <h2>הרשמה למערכת</h2>
             <p>מלאו את הפרטים והתחילו להרוויח</p>
             
@@ -97,7 +98,7 @@
         <div class="modal-content">
             <h3>איך זה עובד?</h3>
             <div class="modal-body">
-                <p>ברוכים הבאים לפלטפורמת קבלו כסף בחינם! כאן אתם מרוויחים כסף על עצם השהות שלכם באתר. תוכלו לצפות בסרטונים, לשחק במשחקים ולהעביר את הזמן - והארנק שלכם מתמלא. שימו לב: חובה לצבור לפחות שעה אחת במצטבר באתר כדי להתחיל לקבל ולמשוך את הכסף!</p>
+                <p id="dynamic-terms-text">טוען את תנאי המערכת...</p>
             </div>
             
             <div class="checkbox-group">
@@ -143,20 +144,37 @@
                 <span>חובה להשלים שעה אחת במצטבר (01:00:00) כדי להתחיל לקבל את הכסף לארנק!</span>
             </div>
 
+            <div id="promo-banner" class="promo-box" style="display: none;">
+                <i class="fas fa-fire"></i>
+                <span id="promo-banner-text"></span>
+            </div>
+
             <div class="content-placeholder">
                 <h3>האזור שלכם להעברת הזמן 🚀</h3>
-                <p>כאן יופיעו בקרוב סרטונים אינטראקטיביים, משחקים ממכרים ותוכן בלעדי שיאפשרו לכם להרוויח עוד ועוד כסף בזמן שאתם נהנים!</p>
-                <div class="loading-dots">
-                    <span></span><span></span><span></span>
+                <p>כאן מופיעים משחקים, סרטונים ומשימות שיאפשרו לכם להרוויח כסף בזמן שאתם נהנים!</p>
+                
+                <div id="dynamic-contents-container" class="contents-grid">
+                    <div class="loading-dots">
+                        <span></span><span></span><span></span>
+                    </div>
                 </div>
             </div>
         </main>
 
         <div class="whatsapp-container">
-            <a href="https://wa.me/972505669532?text=היי,%20אשמח%20לקבל%20שירות%20בנוגע%20לאתר%20קבלו%20כסף%20בחינם" class="whatsapp-round-btn" target="_blank">
+            <a href="https://wa.me/972505669532?text=היי,%20אשמח%20לקבל%20שירות%20בנוגע%20לאתר%20קבלו%20כסף%20בחינם" class="whatsapp-round-btn" target="_blank" draggable="false">
                 <i class="fab fa-whatsapp"></i>
             </a>
             <span class="whatsapp-label">שירות לקוחות</span>
+        </div>
+    </div>
+
+    <div id="global-popup-notif" class="modal" style="display: none;">
+        <div class="modal-content text-center">
+            <h3 style="color: #ef4444;"><i class="fas fa-bell"></i> הודעת מערכת חדשה!</h3>
+            <p id="global-notif-msg" style="margin: 15px 0; font-size: 16px;"></p>
+            <img id="global-notif-img" src="" alt="התראה" class="notif-popup-img" style="display: none; max-width: 100%; border-radius: 10px; margin-bottom: 15px;" draggable="false">
+            <button onclick="document.getElementById('global-popup-notif').style.display='none'" class="btn-primary">סגור הודעה</button>
         </div>
     </div>
 
