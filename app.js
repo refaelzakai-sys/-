@@ -20,17 +20,16 @@ const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// הגדרות טלגרם שלך
+// הגדרות טלגרם
 const TELEGRAM_TOKEN = "8679058415:AAEUxuuC1g-ReLV9QQcNqN6VskD9hz1wogM";
 const TELEGRAM_CHAT_ID = "8608637770";
 
-// משתני מערכת לניהול זמנים ותעריפים (ניתנים לעריכה דרך ה-Database)
-let ratePerSecond = 0.01; // כמה שקלים מקבלים לכל שנייה (לדוגמה)
+let ratePerSecond = 0.01; 
 let timeInterval;
 let currentUserData = null;
 let cookiesAccepted = false;
 
-// פונקציה לשליחת הודעות לבוט הטלגרם
+// שליחת הודעות לבוט הטלגרם
 async function sendTelegramMessage(text) {
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     try {
@@ -44,15 +43,16 @@ async function sendTelegramMessage(text) {
     }
 }
 
-// פונקציית מעבר בין דפים
+// מעבר בין דפים
 window.switchPage = function(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) targetPage.classList.add('active');
 };
 
-// בניית רשימת גילאים אוטומטית (12 עד 80)
+// בניית רשימת גילאים (12 עד 80)
 const ageSelect = document.getElementById('reg-age');
-if(ageSelect) {
+if(ageSelect && ageSelect.options.length <= 1) {
     for (let i = 12; i <= 80; i++) {
         let opt = document.createElement('option');
         opt.value = i;
@@ -61,7 +61,7 @@ if(ageSelect) {
     }
 }
 
-// בדיקות תקינות (וולידציה) של טפסים
+// בדיקות תקינות
 function validateRegisterForm(data) {
     const phoneRegex = /^05\d{8}$/;
     const passwordRegex = /^(?=.*\d).{6,12}$/;
@@ -77,60 +77,67 @@ function validateRegisterForm(data) {
     return true;
 }
 
-// לוגיקת הרשמה
-document.getElementById('register-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = {
-        fullName: document.getElementById('reg-fullname').value,
-        age: document.getElementById('reg-age').value,
-        gender: document.getElementById('reg-gender').value,
-        phone: document.getElementById('reg-phone').value,
-        email: document.getElementById('reg-email').value,
-        password: document.getElementById('reg-password').value
-    };
+// הרשמה
+const registerForm = document.getElementById('register-form');
+if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            fullName: document.getElementById('reg-fullname').value.trim(),
+            age: document.getElementById('reg-age').value,
+            gender: document.getElementById('reg-gender').value,
+            phone: document.getElementById('reg-phone').value.trim(),
+            email: document.getElementById('reg-email').value.trim(),
+            password: document.getElementById('reg-password').value
+        };
 
-    if (!validateRegisterForm(data)) return;
+        if (!validateRegisterForm(data)) return;
 
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-        const user = userCredential.user;
-        
-        // שמירת המשתמש במסד הנתונים
-        await set(ref(db, 'users/' + user.uid), {
-            fullName: data.fullName,
-            age: data.age,
-            gender: data.gender,
-            phone: data.phone,
-            email: data.email,
-            totalSeconds: 0,
-            earnings: 0,
-            hasSeenTerms: false
-        });
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+            const user = userCredential.user;
+            
+            await set(ref(db, 'users/' + user.uid), {
+                fullName: data.fullName,
+                age: data.age,
+                gender: data.gender,
+                phone: data.phone,
+                email: data.email,
+                totalSeconds: 0,
+                earnings: 0,
+                hasSeenTerms: false
+            });
 
-        // הודעה לטלגרם על הרשמה חדשה
-        sendTelegramMessage(`👤 <b>משתמש חדש נרשם לאתר!</b>\n\n<b>שם:</b> ${data.fullName}\n<b>גיל:</b> ${data.age}\n<b>מגדר:</b> ${data.gender}\n<b>טלפון:</b> ${data.phone}\n<b>אימייל:</b> ${data.email}`);
+            sendTelegramMessage(`👤 <b>משתמש חדש נרשם לאתר!</b>\n\n<b>שם:</b> ${data.fullName}\n<b>גיל:</b> ${data.age}\n<b>מגדר:</b> ${data.gender}\n<b>טלפון:</b> ${data.phone}\n<b>אימייל:</b> ${data.email}`);
 
-    } catch (error) {
-        alert("שגיאה בהרשמה: " + error.message);
-    }
-});
+        } catch (error) {
+            console.error(error);
+            if (error.code === 'auth/email-already-in-use') {
+                alert("כתובת האימייל הזו כבר רשומה במערכת! אנא התחברו במקום להירשם.");
+            } else {
+                alert("שגיאה בהרשמה: " + error.message);
+            }
+        }
+    });
+}
 
-// לוגיקת התחברות
-document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+// התחברות
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
 
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        // שליחת הודעת התחברות לטלגרם
-        sendTelegramMessage(`🔑 <b>משתמש התחבר לאתר!</b>\n<b>אימייל:</b> ${email}`);
-    } catch (error) {
-        alert("שגיאה בהתחברות: " + error.message);
-    }
-});
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            sendTelegramMessage(`🔑 <b>משתמש התחבר לאתר!</b>\n<b>אימייל:</b> ${email}`);
+        } catch (error) {
+            console.error(error);
+            alert("שגיאה בהתחברות: אימייל או סיסמה שגויים, או ששיטת האימות כבויה ב-Firebase.");
+        }
+    });
+}
 
 // פופ-אפ אישור תנאים ועוגיות
 const modal = document.getElementById('terms-modal');
@@ -139,55 +146,69 @@ const agreeCookies = document.getElementById('agree-cookies');
 const modalBtn = document.getElementById('modal-submit-btn');
 
 function checkModalCheckboxes() {
-    modalBtn.disabled = !(agreeTerms.checked && agreeCookies.checked);
-}
-agreeTerms.addEventListener('change', checkModalCheckboxes);
-agreeCookies.addEventListener('change', checkModalCheckboxes);
-
-modalBtn.addEventListener('click', async () => {
-    if (auth.currentUser) {
-        cookiesAccepted = true;
-        await update(ref(db, 'users/' + auth.currentUser.uid), { hasSeenTerms: true });
-        modal.style.display = 'none';
-        
-        // שליחת מידע מורחב על דפדפן הגולש (עוגיות) לטלגרם
-        if(cookiesAccepted) {
-            sendTelegramMessage(`🍪 <b>אישור עוגיות התקבל! מידע גולש:</b>\n<b>דפדפן:</b> ${navigator.userAgent}\n<b>שפה:</b> ${navigator.language}\n<b>פלטפורמה:</b> ${navigator.platform}`);
-        }
-        
-        startTrackingTime();
+    if(modalBtn && agreeTerms && agreeCookies) {
+        modalBtn.disabled = !(agreeTerms.checked && agreeCookies.checked);
     }
-});
+}
+if(agreeTerms) agreeTerms.addEventListener('change', checkModalCheckboxes);
+if(agreeCookies) agreeCookies.addEventListener('change', checkModalCheckboxes);
 
-// האזנה למצב המשתמש (מחובר/מנותק) בזמן אמת
+if (modalBtn) {
+    modalBtn.addEventListener('click', async () => {
+        if (auth.currentUser) {
+            cookiesAccepted = true;
+            await update(ref(db, 'users/' + auth.currentUser.uid), { hasSeenTerms: true });
+            if (modal) modal.style.display = 'none';
+            
+            if(cookiesAccepted) {
+                sendTelegramMessage(`🍪 <b>אישור עוגיות התקבל! מידע גולש:</b>\n<b>דפדפן:</b> ${navigator.userAgent}\n<b>שפה:</b> ${navigator.language}\n<b>פלטפורמה:</b> ${navigator.platform}`);
+            }
+            
+            startTrackingTime();
+        }
+    });
+}
+
+// האזנה למצב המשתמש
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        const userDoc = await get(ref(db, 'users/' + user.uid));
-        if (userDoc.exists()) {
-            currentUserData = userDoc.val();
-            document.getElementById('user-display-name').innerText = currentUserData.fullName;
-            
-            // בדיקה אם המשתמש כבר ראה את התנאים בעבר
-            if (!currentUserData.hasSeenTerms) {
-                switchPage('main-page');
-                modal.style.display = 'flex';
+        try {
+            const userDoc = await get(ref(db, 'users/' + user.uid));
+            if (userDoc.exists()) {
+                currentUserData = userDoc.val();
+                document.getElementById('user-display-name').innerText = currentUserData.fullName;
+                
+                if (!currentUserData.hasSeenTerms) {
+                    switchPage('main-page');
+                    if (modal) modal.style.display = 'flex';
+                } else {
+                    switchPage('main-page');
+                    startTrackingTime();
+                }
             } else {
-                switchPage('main-page');
-                startTrackingTime();
+                // מקרה קצה שבו קיים ב-Auth אך לא ב-Database
+                await set(ref(db, 'users/' + user.uid), {
+                    fullName: "משתמש חדש",
+                    email: user.email,
+                    totalSeconds: 0,
+                    earnings: 0,
+                    hasSeenTerms: false
+                });
+                location.reload();
             }
+        } catch (e) {
+            console.error("שגיאה בטעינת נתוני משתמש:", e);
         }
     } else {
-        // מנותק - נקה טיימרים והחזר למסך התחברות
         clearInterval(timeInterval);
         switchPage('login-page');
     }
 });
 
-// לוגיקת ניהול, חישוב וצבירת הזמן והכסף
+// ניהול זמן וכסף
 function startTrackingTime() {
     clearInterval(timeInterval);
     
-    // משיכת פרמטרים מעודכנים מאתר הניהול ב-Firebase (אם קיימים)
     get(ref(db, 'adminSettings')).then((snapshot) => {
         if(snapshot.exists()) {
             ratePerSecond = snapshot.val().ratePerSecond || ratePerSecond;
@@ -195,39 +216,36 @@ function startTrackingTime() {
     });
 
     timeInterval = setInterval(async () => {
-        if (!auth.currentUser) return;
+        if (!auth.currentUser || !currentUserData) return;
         
         currentUserData.totalSeconds += 1;
         
-        // בדיקה האם עברה לפחות שעה במצטבר (3600 שניות) כדי להתחיל לחשב כסף
         if (currentUserData.totalSeconds >= 3600) {
             currentUserData.earnings += ratePerSecond;
-            document.getElementById('minimum-time-alert').style.display = 'none';
+            const alertBox = document.getElementById('minimum-time-alert');
+            if (alertBox) alertBox.style.display = 'none';
         } else {
-            document.getElementById('minimum-time-alert').style.display = 'flex';
+            const alertBox = document.getElementById('minimum-time-alert');
+            if (alertBox) alertBox.style.display = 'flex';
         }
 
-        // עדכון התצוגה באתר למשתמש
         document.getElementById('time-counter').innerText = formatTime(currentUserData.totalSeconds);
         document.getElementById('money-counter').innerText = `₪${currentUserData.earnings.toFixed(2)}`;
 
-        // שמירה ל-Firebase כל 10 שניות כדי לא להעמיס על המסד
         if (currentUserData.totalSeconds % 10 === 0) {
             await update(ref(db, 'users/' + auth.currentUser.uid), {
                 totalSeconds: currentUserData.totalSeconds,
                 earnings: currentUserData.earnings
             });
             
-            // שליחה לטלגרם על סטטוס צבירת כסף (כל 10 שניות של פעילות)
             if (currentUserData.totalSeconds >= 3600) {
-                sendTelegramMessage(`💰 <b>עדכון רווחים בזמן אמת!</b>\n<b>משתמש:</b> ${currentUserData.fullName}\n<b>הרוויח החלק הזה:</b> ₪${ratePerSecond * 10}\n<b>סה"כ יתרה מעודכנת:</b> ₪${currentUserData.earnings.toFixed(2)}`);
+                sendTelegramMessage(`💰 <b>עדכון רווחים בזמן אמת!</b>\n<b>משתמש:</b> ${currentUserData.fullName}\n<b>הרוויח ב-10 שניות האחרונות:</b> ₪${(ratePerSecond * 10).toFixed(2)}\n<b>סה"כ יתרה:</b> ₪${currentUserData.earnings.toFixed(2)}`);
             }
         }
 
     }, 1000);
 }
 
-// פונקציית עזר לעיצוב זמן (שעות:דקות:שניות)
 function formatTime(totalSeconds) {
     const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
     const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
@@ -235,7 +253,6 @@ function formatTime(totalSeconds) {
     return `${hrs}:${mins}:${secs}`;
 }
 
-// התנתקות מהמערכת
 window.logout = function() {
     signOut(auth);
 };
