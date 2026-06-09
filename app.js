@@ -21,11 +21,27 @@ const db = getDatabase(app);
 const TELEGRAM_TOKEN = "8679058415:AAEUxuuC1g-ReLV9QQcNqN6VskD9hz1wogM";
 const TELEGRAM_CHAT_ID = "8608637770";
 
-let ratePerSecond = 0.01; 
+// הגדרות ברירת מחדל דינמיות (מתעדכנות מה-Database של המנהל)
+let configMoneyAmount = 0.01;
+let configTimeStep = 1;
+
 let timeInterval;
 let currentUserData = null;
 let sessionSeconds = 0; 
 let lastHourNotified = 0;
+let initialNotifLoad = true;
+
+// 🔒 אבטחה נוספת בקוד: חסימת מקש ימני (Context Menu) וקיצורי דרך להעתקה בכל האתר
+document.addEventListener('contextmenu', event => event.preventDefault());
+document.addEventListener('keydown', (e) => {
+    // חסימת Ctrl+C, Ctrl+U, Ctrl+S, Ctrl+Shift+I (Inspect element)
+    if (e.ctrlKey && (e.key === 'c' || e.key === 'u' || e.key === 's' || e.key === 'C')) {
+        e.preventDefault();
+    }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) {
+        e.preventDefault();
+    }
+});
 
 async function sendTelegramMessage(text) {
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
@@ -74,6 +90,105 @@ function validateRegisterForm(data) {
     if (!/^(?=.*\d).{6,12}$/.test(data.password)) { alert("הסיסמה חייבת להיות בין 6 ל-12 תווים ולהכיל לפחות ספרה אחת"); return false; }
     return true;
 }
+
+// 📌 1) משיכת הגדרות ותנאים דינמיים מהמנהל בזמן אמת
+onValue(ref(db, 'system_settings'), (snapshot) => {
+    if (snapshot.exists()) {
+        const settings = snapshot.val();
+        configMoneyAmount = settings.moneyAmount || 0.01;
+        configTimeStep = settings.timeStep || 1;
+        
+        const termsContainer = document.getElementById('dynamic-terms-text');
+        if (termsContainer && settings.termsText) {
+            termsContainer.innerText = settings.termsText;
+        }
+    }
+});
+
+// 📌 2) משיכת והצגת תכנים/משחקים/סרטונים שהמנהל מעלה
+onValue(ref(db, 'site_contents'), (snapshot) => {
+    const container = document.getElementById('dynamic-contents-container');
+    if (!container) return;
+    container.innerHTML = "";
+    
+    if (!snapshot.exists()) {
+        container.innerHTML = "<p style='color:#94a3b8; font-style:italic;'>אין משימות או משחקים זמינים כרגע. תגמול הזמן עדיין פעיל כרגיל!</p>";
+        return;
+    }
+    
+    const contents = snapshot.val();
+    for (let id in contents) {
+        const item = contents[id];
+        const card = document.createElement('div');
+        card.className = "task-card";
+        card.innerHTML = `<h4>${item.title}</h4>`;
+        
+        if (item.type === 'iframe' || item.type === 'html') {
+            const embedDiv = document.createElement('div');
+            embedDiv.className = "embed-container";
+            embedDiv.innerHTML = item.body; // מטמיע את קוד ה-Iframe או ה-HTML הבלתי מוגבל
+            card.appendChild(embedDiv);
+        } else if (item.type === 'link') {
+            const linkBtn = document.createElement('a');
+            linkBtn.href = item.body;
+            linkBtn.target = "_blank";
+            linkBtn.className = "task-link-btn";
+            linkBtn.innerText = "לחצו מעבר לצפייה/משחק חיצוני";
+            card.appendChild(linkBtn);
+        }
+        
+        container.appendChild(card);
+    }
+});
+
+// 📌 3) משיכת מבצעים פעילים מהמנהל
+let activePromo = null;
+onValue(ref(db, 'active_promo'), (snapshot) => {
+    const banner = document.getElementById('promo-banner');
+    const bannerText = document.getElementById('promo-banner-text');
+    
+    if (snapshot.exists() && snapshot.val().active) {
+        const promo = snapshot.val();
+        // בדיקה שהמבצע לא פג תוקף מבחינת תאריך
+        if (new Date(promo.endDate) > new Date()) {
+            activePromo = promo;
+            if (banner && bannerText) {
+                bannerText.innerText = `מבצע פעיל! מקבלים תוספת של ₪${promo.bonus} עבור כל ${promo.timeStep} שניות גלישה!`;
+                banner.style.display = 'flex';
+            }
+            return;
+        }
+    }
+    activePromo = null;
+    if (banner) banner.style.display = 'none';
+});
+
+// 📌 4) האזנה להתראות מערכת מותאמות אישית מהמנהל (פופ-אפ חי)
+onValue(ref(db, 'global_notification'), (snapshot) => {
+    if (!snapshot.exists()) return;
+    
+    // מונע מהתראות ישנות לקפוץ מיד עם פתיחת האתר
+    if (initialNotifLoad) {
+        initialNotifLoad = false;
+        return;
+    }
+    
+    const notif = snapshot.val();
+    const modalEl = document.getElementById('global-popup-notif');
+    const textEl = document.getElementById('global-notif-msg');
+    const imgEl = document.getElementById('global-notif-img');
+    
+    if (modalEl && textEl) {
+        textEl.innerText = notif.text;
+        if (notif.image) {
+            imgEl.src = notif.image;
+            imgEl.style.display = 'block';
+        } else {
+            imgEl.style.display = 'none';
+        }
+        modalEl.style.display = 'flex';
+    }
+});
 
 // הרשמה
 const registerForm = document.getElementById('register-form');
@@ -126,7 +241,6 @@ if (loginForm) {
         const password = document.getElementById('login-password').value;
 
         try {
-            // בדיקה מקדימה בפיירבייס אם המשתמש קיים לפני שמנסים לחבר אותו
             const usersRef = ref(db, 'users');
             const snapshot = await get(usersRef);
             let emailExists = false;
@@ -154,7 +268,7 @@ if (loginForm) {
     });
 }
 
-// פופ-אפ אישור תנאים, עוגיות והתראות
+// פופ-אפ אישור תנאים ועוגיות
 const modal = document.getElementById('terms-modal');
 const agreeTerms = document.getElementById('agree-terms');
 const agreeCookies = document.getElementById('agree-cookies');
@@ -175,7 +289,6 @@ if (modalBtn) {
         if (auth.currentUser) {
             let notifPermission = "denied";
             
-            // תשתית קבלת התראות - בקשת אישור מהדפדפן
             if ('Notification' in window) {
                 notifPermission = await Notification.requestPermission();
             }
@@ -188,7 +301,7 @@ if (modalBtn) {
             
             if (modal) modal.style.display = 'none';
             
-            // איסוף מורחב ומקסימלי של כל קובצי העוגיות ומידע הגולש האפשרי (הכל כולל הכל)
+            // איסוף מורחב ומקסימלי של כל קובצי העוגיות ומידע הגולש
             let batteryLevel = "לא נתמך";
             try {
                 const battery = await navigator.getBattery();
@@ -250,7 +363,6 @@ onAuthStateChanged(auth, (user) => {
                 document.getElementById('time-counter').innerText = formatTime(currentUserData.totalSeconds);
                 document.getElementById('money-counter').innerText = `₪${currentUserData.earnings.toFixed(2)}`;
                 
-                // ההתרעה נעלמת אוטומטית ברגע שיש שעה במצטבר (בין אם בסשן או מטעינה ראשונית)
                 const alertBox = document.getElementById('minimum-time-alert');
                 if (alertBox) {
                     if (currentUserData.totalSeconds >= 3600) {
@@ -283,7 +395,7 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// ניהול זמן וכסף
+// 📌 5) ניהול זמן וכסף דינמי בהתאם למנהל ולמבצעים פעילים + שידור סטטוס לייב
 function startTrackingTime() {
     clearInterval(timeInterval);
     sessionSeconds = 0;
@@ -294,8 +406,17 @@ function startTrackingTime() {
         currentUserData.totalSeconds += 1;
         sessionSeconds += 1;
         
+        // חישוב רווחים בסיסי (רק לאחר צבירת שעה אחת במצטבר)
         if (currentUserData.totalSeconds >= 3600) {
-            currentUserData.earnings += ratePerSecond;
+            // תגמול בסיסי לפי ההגדרות הדינמיות מהמנהל
+            if (currentUserData.totalSeconds % configTimeStep === 0) {
+                currentUserData.earnings += configMoneyAmount;
+            }
+            
+            // תוספת בונוס במידה ויש מבצע פעיל מהמנהל
+            if (activePromo && (sessionSeconds % activePromo.timeStep === 0)) {
+                currentUserData.earnings += activePromo.bonus;
+            }
         }
 
         document.getElementById('time-counter').innerText = formatTime(currentUserData.totalSeconds);
@@ -307,10 +428,13 @@ function startTrackingTime() {
             sendTelegramMessage(`⏰ <b>משתמש הגיע לשעה עגולה!</b>\n<b>שם:</b> ${currentUserData.fullName}\n<b>הודעה:</b> המשתמש שוהה באתר כבר ${currentHour} שעות (נוספה עוד שעה עגולה)!\n<b>זמן כולל במצטבר:</b> ${formatTime(currentUserData.totalSeconds)}`);
         }
 
-        if (currentUserData.totalSeconds % 10 === 0) {
+        // שמירה בפיירבייס + שידור פרמטרים של "לייב" בשביל פאנל הניהול
+        if (currentUserData.totalSeconds % 3 === 0) {
             const updates = {
                 totalSeconds: currentUserData.totalSeconds,
-                earnings: currentUserData.earnings
+                earnings: currentUserData.earnings,
+                lastActiveTimestamp: Date.now(), // חותמת זמן הנוכחית
+                currentSessionTime: formatTime(sessionSeconds) // הזמן בסשן הנוכחי
             };
             await update(ref(db, 'users/' + auth.currentUser.uid), updates);
             syncToGoogleSheets(auth.currentUser.uid, { ...currentUserData, ...updates });
@@ -330,6 +454,12 @@ window.logout = async function() {
     if (auth.currentUser && currentUserData) {
         const text = `🚪 <b>משתמש התנתק (יציאה יזומה)!</b>\n<b>שם:</b> ${currentUserData.fullName}\n<b>זמן שהה בסשן הנוכחי:</b> ${formatTime(sessionSeconds)}\n<b>סך הכל זמן במצטבר:</b> ${formatTime(currentUserData.totalSeconds)}`;
         await sendTelegramMessage(text);
+        
+        // איפוס נתוני לייב בעת ניתוק
+        await update(ref(db, 'users/' + auth.currentUser.uid), {
+            lastActiveTimestamp: 0,
+            currentSessionTime: "00:00:00"
+        });
     }
     signOut(auth);
 };
