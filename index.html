@@ -3,181 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>קבלו כסף בחינם - מרוויחים כסף מזמן מסך</title>
-    
-    <meta name="description" content="רוצים להרוויח כסף בחינם? כנסו ולא תפסידו! הפלטפורמה המובילה המאפשרת לכם להפוך את זמן הגלישה, הצפייה והמשחק שלכם לכסף אמיתי ישירות לחשבון.">
-    <meta name="keywords" content="כסף בחינם, להרוויח כסף, כסף מהאינטרנט, עבודה מהבית, כסף מגלישה, משחקים ומרוויחים, כסף מצפייה, קבלו כסף, כסף קל, הכנסה נוספת">
-    <meta name="author" content="קבלו כסף בחינם">
-    
-    <meta property="og:title" content="קבלו כסף בחינם - כנסו ולא תפסידו!">
-    <meta property="og:description" content="הופכים את זמן הגלישה שלכם לכסף נקי. הרשמו עכשיו והתחילו להרוויח.">
-    <meta property="og:image" content="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg">
-    
-    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg">
-    <link rel="apple-touch-icon" href="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg">
-    
-    <link rel="manifest" href="manifest.json">
-    
+    <title>מערכת גלישה ותגמולים</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="no-select">
+<body>
 
-    <div id="login-page" class="page active">
-        <div class="auth-card">
-            <img src="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg" alt="לוגו" class="auth-logo no-save" oncontextmenu="return false;" draggable="false">
-            <h2>ברוכים הבאים חזרה</h2>
-            <p>התחברו כדי להמשיך לצבור כסף</p>
+    <div id="auth-screen" class="container">
+        <div class="auth-box">
+            <h2 id="auth-title">התחברות למערכת</h2>
             
-            <form id="login-form">
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="login-email" placeholder="אימייל" required>
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="login-password" placeholder="סיסמה" required>
-                </div>
-                <button type="submit" class="btn-primary">התחברות</button>
-            </form>
-            <p class="auth-switch">עוד לא רשומים? <span onclick="switchPage('register-page')">הרשמו כאן</span></p>
+            <div id="register-fields" style="display: none;">
+                <input type="text" id="reg-name" placeholder="שם מלא">
+                <input type="tel" id="reg-phone" placeholder="מספר טלפון">
+            </div>
+            
+            <input type="email" id="auth-email" placeholder="אימייל">
+            <input type="password" id="auth-password" placeholder="סיסמה">
+            
+            <button id="btn-primary" onclick="handleAuthAction()">התחבר</button>
+            <p id="toggle-auth-text" onclick="toggleAuthMode()">אין לך חשבון? להרשמה לחץ כאן</p>
         </div>
     </div>
 
-    <div id="register-page" class="page">
-        <div class="auth-card">
-            <img src="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg" alt="לוגו" class="auth-logo no-save" oncontextmenu="return false;" draggable="false">
-            <h2>הרשמה למערכת</h2>
-            <p>מלאו את הפרטים והתחילו להרוויח</p>
-            
-            <form id="register-form">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="reg-fullname" placeholder="שם מלא" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-calendar-alt"></i>
-                    <select id="reg-age" required>
-                        <option value="" disabled selected>בחרו גיל</option>
-                    </select>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-venus-mars"></i>
-                    <select id="reg-gender" required>
-                        <option value="" disabled selected>מגדר</option>
-                        <option value="זכר">זכר</option>
-                        <option value="נקבה">נקבה</option>
-                        <option value="אחר">אחר</option>
-                    </select>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-phone"></i>
-                    <input type="tel" id="reg-phone" placeholder="פלאפון (למשל 0501234567)" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="reg-email" placeholder="אימייל" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="reg-password" placeholder="סיסמה (6-12 תווים, לפחות ספרה אחת)" required>
-                </div>
-                
-                <button type="submit" class="btn-primary">הרשמה והמשך</button>
-            </form>
-            <p class="auth-switch">כבר יש לכם חשבון? <span onclick="switchPage('login-page')">התחברו כאן</span></p>
-        </div>
-    </div>
-
-    <div id="terms-modal" class="modal">
-        <div class="modal-content">
-            <h3>איך זה עובד?</h3>
-            <div class="modal-body">
-                <p id="dynamic-terms-text">טוען את תנאי המערכת...</p>
-            </div>
-            
-            <div class="checkbox-group">
-                <label>
-                    <input type="checkbox" id="agree-terms">
-                    מאשר את הכללים (הטקסט שמופיע למעלה)
-                </label>
-                <label>
-                    <input type="checkbox" id="agree-cookies">
-                    מאשר קובצי עוגיות (Cookies) ומערכת
-                </label>
-                <label>
-                    <input type="checkbox" id="agree-notifications">
-                    אני מסכים לקבל התראות ועדכונים מהאתר למכשיר שלי
-                </label>
-            </div>
-            
-            <button id="modal-submit-btn" class="btn-primary" disabled>אישור והמשך לאתר</button>
-        </div>
-    </div>
-
-    <div id="main-page" class="page">
-        <header class="main-header">
-            <div class="header-right">
-                <div class="user-welcome">שלום, <span id="user-display-name" class="user-display-name">אורח</span></div>
-                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
-            </div>
-            <div class="header-stats">
-                <div class="mini-stat">
-                    <i class="fas fa-clock"></i>
-                    <span id="time-counter">00:00:00</span>
-                </div>
-                <div class="mini-stat">
-                    <i class="fas fa-wallet"></i>
-                    <span id="money-counter">₪0.00</span>
-                </div>
-            </div>
+    <div id="dashboard-screen" class="container" style="display: none;">
+        <header>
+            <h1>ברוך הבא, <span id="user-name-display">גולש</span>!</h1>
+            <button class="btn-logout" onclick="auth.signOut()">התנתק</button>
         </header>
 
-        <main class="dashboard-content">
-            <div id="minimum-time-alert" class="alert-box">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>חובה להשלים שעה אחת במצטבר (01:00:00) כדי להתחיל לקבל את הכסף לארנק!</span>
+        <main>
+            <div class="stats-grid">
+                <div class="card">
+                    <h3>הארנק שלי</h3>
+                    <p id="money-counter" class="counter">₪0.00</p>
+                </div>
+                <div class="card">
+                    <h3>זמן גלישה במערכת</h3>
+                    <p id="time-counter" class="counter">00:00:00</p>
+                </div>
             </div>
 
-            <div id="promo-banner" class="promo-box" style="display: none;">
-                <i class="fas fa-fire"></i>
-                <span id="promo-banner-text"></span>
+            <div id="time-lock-warning" class="warning-banner">
+                ⚠️ חובה להשלים שעה אחת במצטבר (01:00:00) של פעילות באתר כדי להפעיל את מנגנון צבירת הכספים בארנק.
             </div>
 
-            <div class="content-placeholder">
-                <h3>האזור שלכם להעברת הזמן 🚀</h3>
-                <p>כאן מופיעים משחקים, סרטונים ומשימות שיאפשרו לכם להרוויח כסף בזמן שאתם נהנים!</p>
-                
-                <div id="dynamic-contents-container" class="contents-grid">
-                    <div class="loading-dots">
-                        <span></span><span></span><span></span>
-                    </div>
+            <div class="content-section">
+                <h3>המשימות והתכנים שלך</h3>
+                <div id="dynamic-content-area">
+                    <p>טוען תכנים ומשימות...</p>
                 </div>
             </div>
         </main>
 
-        <div class="whatsapp-container">
-            <a href="https://wa.me/972505669532?text=היי,%20אשמח%20לקבל%20שירות%20בנוגע%20לאתר%20קבלו%20כסף%20בחינם" class="whatsapp-round-btn" target="_blank" draggable="false">
-                <i class="fab fa-whatsapp"></i>
+        <footer>
+            <a id="whatsapp-support-btn" href="https://wa.me/972500000000?text=%D7%94%D7%99%D7%99%D7%8C%20%D7%A9%D7%9E%D7%99%20" target="_blank" class="whatsapp-button">
+                💬 שירות לקוחות ב-WhatsApp
             </a>
-            <span class="whatsapp-label">שירות לקוחות</span>
-        </div>
+        </footer>
     </div>
 
-    <div id="global-popup-notif" class="modal" style="display: none;">
-        <div class="modal-content text-center">
-            <h3 style="color: #ef4444;"><i class="fas fa-bell"></i> הודעת מערכת חדשה!</h3>
-            <p id="global-notif-msg" style="margin: 15px 0; font-size: 16px;"></p>
-            <img id="global-notif-img" src="" alt="התראה" class="notif-popup-img" style="display: none; max-width: 100%; border-radius: 10px; margin-bottom: 15px;" draggable="false">
-            <button onclick="document.getElementById('global-popup-notif').style.display='none'" class="btn-primary">סגור הודעה</button>
-        </div>
-    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
-    <script type="module" src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
