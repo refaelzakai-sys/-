@@ -95,9 +95,9 @@
 
     <div id="terms-modal" class="modal">
         <div class="modal-content">
-            <h3 id="modal-title-text">איך זה עובד?</h3>
+            <h3>איך זה עובד?</h3>
             <div class="modal-body">
-                <p id="modal-body-text">ברוכים הבאים לפלטפורמת קבלו כסף בחינם! כאן אתם מרוויחים כסף על עצם השהות שלכם באתר. תוכלו לצפות בסרטונים, לשחק במשחקים ולהעביר את הזמן - והארנק שלכם מתמלא. שימו לב: חובה לצבור לפחות שעה אחת במצטבר באתר כדי להתחיל לקבל ולמשוך את הכסף!</p>
+                <p>ברוכים הבאים לפלטפורמת קבלו כסף בחינם! כאן אתם מרוויחים כסף על עצם השהות שלכם באתר. תוכלו לצפות בסרטונים, לשחק במשחקים ולהעביר את הזמן - והארנק שלכם מתמלא. שימו לב: חובה לצבור לפחות שעה אחת במצטבר באתר כדי להתחיל לקבל ולמשוך את הכסף!</p>
             </div>
             
             <div class="checkbox-group">
@@ -117,24 +117,23 @@
 
     <div id="main-page" class="page">
         <header class="main-header">
-            <div class="user-welcome">שלום, <span id="user-display-name" class="user-display-name">אורח</span></div>
-            <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            <div class="header-right">
+                <div class="user-welcome">שלום, <span id="user-display-name" class="user-display-name">אורח</span></div>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+            <div class="header-stats">
+                <div class="mini-stat">
+                    <i class="fas fa-clock"></i>
+                    <span id="time-counter">00:00:00</span>
+                </div>
+                <div class="mini-stat">
+                    <i class="fas fa-wallet"></i>
+                    <span id="money-counter">₪0.00</span>
+                </div>
+            </div>
         </header>
 
         <main class="dashboard-content">
-            <div class="stats-container">
-                <div class="stat-card">
-                    <i class="fas fa-clock icon-time"></i>
-                    <h3>זמן באתר במצטבר</h3>
-                    <div id="time-counter" class="counter-value">00:00:00</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-wallet icon-money"></i>
-                    <h3>הכסף שהרווחת</h3>
-                    <div id="money-counter" class="counter-value">₪0.00</div>
-                </div>
-            </div>
-
             <div id="minimum-time-alert" class="alert-box">
                 <i class="fas fa-exclamation-circle"></i>
                 <span>חובה להשלים שעה אחת במצטבר (01:00:00) כדי להתחיל לקבל את הכסף לארנק!</span>
@@ -149,9 +148,9 @@
             </div>
         </main>
 
-        <a href="https://wa.me/972505669532?text=היי,%20אשמח%20לקבל%20שירות%20בנוגע%20לאתר%20קבלו%20כסף%20בחינם" class="whatsapp-float" target="_blank">
+        <a href="https://wa.me/972505669532?text=היי,%20אשמח%20לקבל%20שירות%20בנוגע%20לאתר%20קבלו%20כסף%20בחינם" class="whatsapp-bar-button" target="_blank">
             <i class="fab fa-whatsapp"></i>
-            <span class="tooltip-text">שירות לקוחות</span>
+            <span>שירות לקוחות בוואטסאפ</span>
         </a>
     </div>
 
