@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>קבלו כסף בחינם - מרוויחים כסף מזמן מסך</title>
+    
+    <meta name="description" content="רוצים להרוויח כסף בחינם? כנסו ולא תפסידו! הפלטפורמה המובילה המאפשרת לכם להפוך את זמן הגלישה, הצפייה והמשחק שלכם לכסף אמיתי ישירות לחשבון.">
+    <meta name="keywords" content="כסף בחינם, להרוויח כסף, כסף מהאינטרנט, עבודה מהבית, כסף מגלישה, משחקים ומרוויחים, כסף מצפייה, קבלו כסף, כסף קל, הכנסה נוספת">
+    <meta name="author" content="קבלו כסף בחינם">
+    
+    <meta property="og:title" content="קבלו כסף בחינם - כנסו ולא תפסידו!">
+    <meta property="og:description" content="הופכים את זמן הגלישה שלכם לכסף נקי. הרשמו עכשיו והתחילו להרוויח.">
+    <meta property="og:image" content="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg">
+    
+    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg">
+    
+    <link rel="manifest" href="manifest.json">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div id="login-page" class="page active">
+        <div class="auth-card">
+            <img src="https://i.ibb.co/jPnNx2hQ/In-Shot-20260609-220647476.jpg" alt="לוגו" class="auth-logo">
+            <h2>ברוכים הבאים חזרה</h2>
+            <p>התחברו כדי להמשיך לצבור כסף</p>
+            
+            <form id="login-form">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="login-email" placeholder="אימייל" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="login-password" placeholder="סיסמה" required>
+                </div>
+                <button type="submit" class="btn-primary">התחברות</button>
+            </form>
+            <p class="auth-switch">עוד לא רשומים? <span onclick="switchPage('register-page')">הרשמו כאן</span></p>
+        </div>
+    </div>
+
+    <div id="register-page" class="page">
+        <div class="auth-card">
+            <h2>הרשמה למערכת</h2>
+            <p>מלאו את הפרטים והתחילו להרוויח</p>
+            
+            <form id="register-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="reg-fullname" placeholder="שם מלא" required>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-calendar-alt"></i>
+                    <select id="reg-age" required>
+                        <option value="" disabled selected>בחרו גיל</option>
+                        </select>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-venus-mars"></i>
+                    <select id="reg-gender" required>
+                        <option value="" disabled selected>מגדר</option>
+                        <option value="זכר">זכר</option>
+                        <option value="נקבה">נקבה</option>
+                        <option value="התאמה אישית">התאמה אישית</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="reg-phone" placeholder="פלאפון (למשל 0501234567)" required>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="reg-email" placeholder="אימייל" required>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="reg-password" placeholder="סיסמה (6-12 תווים, לפחות ספרה אחת)" required>
+                </div>
+                
+                <button type="submit" class="btn-primary">הרשמה והמשך</button>
+            </form>
+            <p class="auth-switch">כבר יש לכם חשבון? <span onclick="switchPage('login-page')">התחברו כאן</span></p>
+        </div>
+    </div>
+
+    <div id="terms-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title-text">איך זה עובד?</h3>
+            <div class="modal-body">
+                <p id="modal-body-text">ברוכים הבאים לפלטפורמת קבלו כסף בחינם! כאן אתם מרוויחים כסף על עצם השהות שלכם באתר. תוכלו לצפות בסרטונים, לשחק במשחקים ולהעביר את הזמן - והארנק שלכם מתמלא. שימו לב: חובה לצבור לפחות שעה אחת במצטבר באתר כדי להתחיל לקבל ולמשוך את הכסף!</p>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="agree-terms">
+                    מאשר את הכללים (הטקסט שמופיע למעלה)
+                </label>
+                <label>
+                    <input type="checkbox" id="agree-cookies">
+                    מאשר קובצי עוגיות (Cookies)
+                </label>
+            </div>
+            
+            <button id="modal-submit-btn" class="btn-primary" disabled>אישור והמשך לאתר</button>
+        </div>
+    </div>
+
+    <div id="main-page" class="page">
+        <header class="main-header">
+            <div class="user-welcome">שלום, <span id="user-display-name">אורח</span></div>
+            <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+        </header>
+
+        <main class="dashboard-content">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <i class="fas fa-clock icon-time"></i>
+                    <h3>זמן באתר במצטבר</h3>
+                    <div id="time-counter" class="counter-value">00:00:00</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-wallet icon-money"></i>
+                    <h3>הכסף שהרווחת</h3>
+                    <div id="money-counter" class="counter-value">₪0.00</div>
+                </div>
+            </div>
+
+            <div id="minimum-time-alert" class="alert-box">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>חובה להשלים שעה אחת במצטבר (01:00:00) כדי להתחיל לקבל את הכסף לארנק!</span>
+            </div>
+
+            <div class="content-placeholder">
+                <h3>האזור שלכם להעברת הזמן 🚀</h3>
+                <p>כאן יופיעו בקרוב סרטונים אינטראקטיביים, משחקים ממכרים ותוכן בלעדי שיאפשרו לכם להרוויח עוד ועוד כסף בזמן שאתם נהנים!</p>
+                <div class="loading-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </main>
+
+        <a href="https://wa.me/972505669532?text=היי,%20אשמח%20לקבל%20שירות%20בנוגע%20לאתר%20קבלו%20כסף%20בחינם" class="whatsapp-float" target="_blank">
+            <i class="fab fa-whatsapp"></i>
+            <span class="tooltip-text">שירות לקוחות</span>
+        </a>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
